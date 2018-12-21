@@ -6,33 +6,50 @@
 using namespace cv;
 
 void FlowerDetector::setImage() {
+    imshow("src", src);
+    medianBlur(src, src, 61);
     Mat hsv;
-    max_color = cv::Mat(src.size(), CV_8UC1, cv::Scalar(0));
+//    max_color = cv::Mat(src.size(), CV_8UC1, cv::Scalar(0));
     threshold(src, src_red, 155, 255, THRESH_BINARY);
 
-//    cvtColor(src, hsv, CV_BGR2HSV);
-//    for (int i = 0; i < hsv.rows; i++) {
-//        for (int j = 0; j < hsv.cols; j++) {
-//            if ((((hsv.ptr<Vec3b>(i)[j][0] > 0) and (hsv.ptr<Vec3b>(i)[j][0] < 8)) or ((hsv.ptr<Vec3b>(i)[j][0] > 120) and (hsv.ptr<Vec3b>(i)[j][0] < 180)))) {
-//                max_color.ptr<Vec3b>(i)[j] = 255;
-//            }
-//        }
-//    }
-//    imshow("hsv", hsv);
+    cvtColor(src, hsv, CV_BGR2HSV);
+    max_color = cv::Mat(hsv.size(), CV_8UC1, cv::Scalar(0));
 
+    const uchar * ptr_hsv = hsv.data;
+    const uchar * ptr_hsv_end = hsv.data + hsv.cols * hsv.rows * 3;
+    uchar * ptr_max_color = max_color.data;
 
-    medianBlur(src, src, 1);
-    int total_pixel = src.cols * src.rows;
-    const uchar * ptr_src = src.data;
-    const uchar * ptr_src_end = src.data + total_pixel * 3;
-    uchar *ptr_max_color = max_color.data;
-    for (; ptr_src != ptr_src_end; ++ptr_src, ++ptr_max_color)	{
-        uchar b = *ptr_src;
-        uchar g = *(++ptr_src);
-        uchar r = *(++ptr_src);
-        if (r > 200 and (g < 230 and b < 230))
-            *ptr_max_color = 255;
+//    Mat splitChannels[3];
+//    split(hsv, splitChannels);
+//    src_channel_r = splitChannels[2];
+//    src_channel_g = splitChannels[1];
+//    src_channel_b = splitChannels[0];
+//    imshow("src_channel_r", src_channel_r);
+
+    for (; ptr_hsv != ptr_hsv_end; ++ptr_hsv, ++ptr_max_color) {
+        uchar h = *ptr_hsv;
+        uchar s = *(++ptr_hsv);
+        uchar v = *(++ptr_hsv);
+        if ((h > 0 and h < 8) or (h > 160 and h < 180)) {
+            * ptr_max_color = 255;
+            cout << h << endl;
+        }
     }
+    imshow("hsv", hsv);
+
+
+//    medianBlur(src, src, 1);
+//    int total_pixel = src.cols * src.rows;
+//    const uchar * ptr_src = src.data;
+//    const uchar * ptr_src_end = src.data + total_pixel * 3;
+//    uchar *ptr_max_color = max_color.data;
+//    for (; ptr_src != ptr_src_end; ++ptr_src, ++ptr_max_color)	{
+//        uchar b = *ptr_src;
+//        uchar g = *(++ptr_src);
+//        uchar r = *(++ptr_src);
+//        if (r > 200 and (g < 230 and b < 230))
+//            *ptr_max_color = 255;
+//    }
 
     Mat element = getStructuringElement(MORPH_RECT, Size(3,3));
     morphologyEx(max_color, max_color, MORPH_OPEN, element);
@@ -42,7 +59,7 @@ void FlowerDetector::setImage() {
 //    src_channel_g = splitChannels[1];
 //    src_channel_b = splitChannels[0];
 //    imshow("src_channel_r", src_channel_r);
-    imshow("src", src);
+
     imshow("max_color", max_color);
 }
 
@@ -86,7 +103,7 @@ void FlowerDetector::showRects(vector<RotatedRect> & rects){
 
 void FlowerDetector::outPut() {
     setImage();
-    findAll();
+//    findAll();
     cout << "rects size is " << rects.size() << endl;
-    showRects(rects);
+//    showRects(rects);
 }
